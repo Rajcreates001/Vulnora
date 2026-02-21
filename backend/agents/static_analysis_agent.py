@@ -49,7 +49,7 @@ class StaticAnalysisAgent(BaseAgent):
     description = "Runs static analysis tools and correlates findings"
 
     async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        project_id = state["project_id"]
+        project_id = state.get("project_id", "")
         files = state.get("files", [])
 
         await self.log(project_id, f"Starting static analysis on {len(files)} files")
@@ -110,10 +110,16 @@ Instructions:
                     if f.get("file_path") in batch_files or not f.get("is_false_positive", False):
                         all_findings.append(f)
             except Exception as e:
-                await self.log(project_id, f"AI analysis batch {batch_idx+1} fallback: {str(e)}", "warning")
+                # await self.log(project_id, f"AI analysis batch {batch_idx+1} fallback: {str(e)}", "warning")
+                pass
                 # For fallback, use the tool findings which are already file-specific
                 all_findings.extend(relevant_bandit)
                 all_findings.extend(relevant_patterns)
+
+            # Small delay between batches to avoid rate limiting
+            if batch_idx < len(file_batches) - 1:
+                import asyncio
+                await asyncio.sleep(2)
 
         # Deduplicate findings
         seen = set()
@@ -187,7 +193,8 @@ Instructions:
                             "tool_source": "bandit",
                         })
         except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
-            await self.log(project_id, f"Bandit not available or failed: {str(e)}", "warning")
+            # await self.log(project_id, f"Bandit not available or failed: {str(e)}", "warning")
+            pass
 
         return results
 

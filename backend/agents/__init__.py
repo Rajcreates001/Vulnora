@@ -7,9 +7,13 @@ from .patch_agent import PatchGenerationAgent
 from .risk_agent import RiskPrioritizationAgent
 from .debate_agent import SecurityDebateAgent
 from .report_agent import ReportGenerationAgent
+from .report_agent import ReportGenerationAgent
 from .insight_agent import InsightAgent
-from .alert_reduction_agent import AlertReductionAgent
 from .missed_vuln_reasoning_agent import MissedVulnReasoningAgent
+from .parser_agent import ParserAgent
+from .graph_agent import GraphAgent
+from .heuristic_agent import HeuristicAgent
+from .alert_reduction_agent import AlertReductionAgent
 
 __all__ = [
     "ReconAgent",
@@ -21,6 +25,9 @@ __all__ = [
     "SecurityDebateAgent",
     "ReportGenerationAgent",
     "InsightAgent",
-    "AlertReductionAgent",
     "MissedVulnReasoningAgent",
+    "ParserAgent",
+    "GraphAgent",
+    "HeuristicAgent",
+    "AlertReductionAgent",
 ]

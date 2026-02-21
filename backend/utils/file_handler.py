@@ -36,10 +36,15 @@ def ensure_upload_dir() -> str:
 
 async def extract_zip(zip_path: str, project_id: str) -> str:
     """Extract ZIP file and return the extraction directory."""
+    import asyncio
     extract_dir = os.path.join(ensure_upload_dir(), project_id)
     os.makedirs(extract_dir, exist_ok=True)
-    with zipfile.ZipFile(zip_path, "r") as zf:
-        zf.extractall(extract_dir)
+    
+    def _do_extract():
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            zf.extractall(extract_dir)
+            
+    await asyncio.to_thread(_do_extract)
     return extract_dir
 
 
@@ -59,7 +64,8 @@ async def clone_github_repo(repo_url: str, project_id: str) -> str:
                 f"https://{settings.github_token}@github.com",
             )
 
-        git.Repo.clone_from(auth_url, clone_dir, depth=1)
+        import asyncio
+        await asyncio.to_thread(git.Repo.clone_from, auth_url, clone_dir, depth=1)
         return clone_dir
     except ImportError:
         pass  # GitPython not installed, try fallback
@@ -96,8 +102,11 @@ async def clone_github_repo(repo_url: str, project_id: str) -> str:
             tmp.close()
 
             try:
-                with zipfile.ZipFile(tmp.name, "r") as zf:
-                    zf.extractall(clone_dir)
+                def _do_extract_zip():
+                    with zipfile.ZipFile(tmp.name, "r") as zf:
+                        zf.extractall(clone_dir)
+                import asyncio
+                await asyncio.to_thread(_do_extract_zip)
 
                 # GitHub ZIP archives have a top-level directory (repo-main/)
                 # Move contents up one level

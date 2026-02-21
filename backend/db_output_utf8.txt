@@ -1,0 +1,178 @@
+AquaIntel_ThreadTest completed
+[recon_agent] info: Starting reconnaissance on 6 files
+[recon_agent] success: Recon complete: 8 entry points, 4 sensitive components found
+[parser_agent] info: Initializing AST syntax tree parser for deterministic layer 1.
+[parser_agent] info: AST Parsing complete: Generated structures for 2 files.
+[system] error: Scan failed: 'errors'
+Traceback (most recent call last):
+  File "E:\Black folder\Vexstorm-hackathon\Vulnora\backend\graph\workflow.py", line 214, in run_security_scan
+    state = await node_fn(state)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "E:\Black folder\Vexstorm-hackathon\Vulnora\backend\graph\workflow.py", line 95, in static_analysis_node
+    return await agent.run(state)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Black folder\Vexstorm-hackathon\Vulnora\backend\agents\static_analysis_agent.py", line 55, in run
+    await self.log(project_id, f"Starting static analysis on {len(files)} files")
+  File "E:\Black folder\Vexstorm-hackathon\Vulnora\backend\agents\base_agent.py", line 16, in log
+    await store_agent_log(project_id, self.name, message, log_type, data)
+  File "E:\Black folder\Vexstorm-hackathon\Vulnora\backend\db\supabase_client.py", line 145, in store_agent_log
+    result = db.table("agent_logs").insert(log_record).execute()
+  File "C:\Users\Maharaj\AppData\Roaming\Python\Python313\site-packages\postgrest\_sync\request_builder.py", line 53, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "E:\Black folder\Vexstorm-hackathon\Vulnora\backend\graph\workflow.py", line 229, in run_security_scan
+    state["errors"].append(error_msg)
+    ~~~~~^^^^^^^^^^
+KeyError: 'errors'
+
+[recon_agent] info: Starting reconnaissance on 6 files
+[recon_agent] success: Recon complete: 8 entry points, 5 sensitive components found
+[parser_agent] info: Initializing AST syntax tree parser for deterministic layer 1.
+[parser_agent] info: AST Parsing complete: Generated structures for 2 files.
+[system] error: Error in static_analysis_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in graph_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in heuristic_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in vulnerability_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in exploit_node: 'project_id'
+[system] error: Error in patch_node: 'project_id'
+[system] error: Error in risk_node: 'project_id'
+[system] error: Error in insight_node: 'project_id'
+[system] error: Error in alert_reduction_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in report_node: 'project_id'
+[system] success: Scan completed. Found 0 vulnerabilities.
+[recon_agent] info: Starting reconnaissance on 6 files
+[recon_agent] success: Recon complete: 8 entry points, 3 sensitive components found
+[parser_agent] info: Initializing AST syntax tree parser for deterministic layer 1.
+[parser_agent] info: AST Parsing complete: Generated structures for 2 files.
+[system] error: Error in static_analysis_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in graph_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in heuristic_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in vulnerability_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in exploit_node: 'project_id'
+[system] error: Error in patch_node: 'project_id'
+[system] error: Error in risk_node: 'project_id'
+[system] error: Error in insight_node: 'project_id'
+[system] error: Error in alert_reduction_node: {'message': 'insert or update on table "agent_logs" violates foreign key constraint "agent_logs_project_id_fkey"', 'code': '23503', 'hint': None, 'details': 'Key (project_id)=() is not present in table "projects".'}
+[system] error: Error in report_node: 'project_id'
+[system] success: Scan completed. Found 0 vulnerabilities.
+[recon_agent] info: Starting reconnaissance on 6 files
+[recon_agent] success: Recon complete: 8 entry points, 4 sensitive components found
+[parser_agent] info: Initializing AST syntax tree parser for deterministic layer 1.
+[parser_agent] info: AST Parsing complete: Generated structures for 2 files.
+[static_analysis_agent] info: Starting static analysis on 6 files
+[static_analysis_agent] warning: AI analysis batch 1 fallback: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+[static_analysis_agent] success: Static analysis complete: 10 findings from 6 files
+[graph_agent] info: Building dependency graph from Layer 1 AST Data.
+[graph_agent] error: Error: 'DependencyGraph' object has no attribute 'add_file_node'
+[heuristic_agent] info: Applying deterministic risk overlays based on path and severity.
+[heuristic_agent] info: Heuristic scoring complete: Assessed risk levels for 0 identified findings.
+[vulnerability_discovery_agent] info: Starting deep vulnerability analysis
+[vulnerability_discovery_agent] info: Analyzing 6 high-priority files
+[vulnerability_discovery_agent] warning: Batch analysis error: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[vulnerability_discovery_agent] warning: Batch analysis error: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[vulnerability_discovery_agent] success: Vulnerability scan complete: 10 vulnerabilities found
+[exploit_simulation_agent] info: Generating exploit simulations for 10 vulnerabilities
+[exploit_simulation_agent] warning: Exploit simulation error: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[exploit_simulation_agent] success: Exploit simulation complete: 10 PoE scripts generated
+[patch_generation_agent] info: Generating patches for 10 vulnerabilities
+[patch_generation_agent] warning: Patch generation error: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[patch_generation_agent] warning: Patch generation error: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[patch_generation_agent] success: Patch generation complete: 10 patches
+[risk_prioritization_agent] info: Scoring 10 vulnerabilities
+[risk_prioritization_agent] warning: Risk scoring fallback: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[risk_prioritization_agent] success: Risk scoring complete. Overall risk: 75.0/100
+[insight_agent] info: Generating human-level insights for vulnerabilities
+[insight_agent] warning: Insight batch 1 fallback: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[insight_agent] warning: Insight batch 2 fallback: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[insight_agent] success: Insight generation complete: 10 insights
+[alert_reduction_agent] info: Reducing alert fatigue based on graph reachability and risk.
+[alert_reduction_agent] info: Alerts minimized from 10 to 1 actionable findings in prioritized order.
+[report_generation_agent] info: Generating security report
+[report_generation_agent] warning: Report generation fallback: Error code: 404 - {'error': {'message': "model 'llama3.2' not found", 'type': 'api_error', 'param': None, 'code': None}}
+[report_generation_agent] success: Report generated. Overall risk: High
+[system] error: Scan failed: {'message': "Could not find the 'exploit_probability' column of 'vulnerabilities' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+Traceback (most recent call last):
+  File "E:\Black folder\Vexstorm-hackathon\Vulnora\backend\graph\workflow.py", line 292, in run_security_scan
+    await store_vulnerability(vuln_record)
+  File "E:\Black folder\Vexstorm-hackathon\Vulnora\backend\db\supabase_client.py", line 104, in store_vulnerability
+    result = db.table("vulnerabilities").insert(vuln).execute()
+  File "C:\Users\Maharaj\AppData\Roaming\Python\Python313\site-packages\postgrest\_sync\request_builder.py", line 53, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': "Could not find the 'exploit_probability' column of 'vulnerabilities' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+
+[recon_agent] info: Starting reconnaissance on 6 files
+[recon_agent] success: Recon complete: 8 entry points, 4 sensitive components found
+[parser_agent] info: Initializing AST syntax tree parser for deterministic layer 1.
+[parser_agent] info: AST Parsing complete: Generated structures for 2 files.
+[static_analysis_agent] info: Starting static analysis on 6 files
+[static_analysis_agent] warning: AI analysis batch 1 fallback: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+[static_analysis_agent] success: Static analysis complete: 10 findings from 6 files
+[graph_agent] info: Building dependency graph from Layer 1 AST Data.
+[graph_agent] error: Error: 'DependencyGraph' object has no attribute 'add_file_node'
+[heuristic_agent] info: Applying deterministic risk overlays based on path and severity.
+[heuristic_agent] info: Heuristic scoring complete: Assessed risk levels for 0 identified findings.
+[vulnerability_discovery_agent] info: Starting deep vulnerability analysis
+[vulnerability_discovery_agent] info: Analyzing 6 high-priority files
+[vulnerability_discovery_agent] warning: Batch analysis error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[vulnerability_discovery_agent] warning: Batch analysis error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[vulnerability_discovery_agent] success: Vulnerability scan complete: 10 vulnerabilities found
+[exploit_simulation_agent] info: Generating exploit simulations for 10 vulnerabilities
+[exploit_simulation_agent] warning: Exploit simulation error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[exploit_simulation_agent] success: Exploit simulation complete: 10 PoE scripts generated
+[patch_generation_agent] info: Generating patches for 10 vulnerabilities
+[patch_generation_agent] warning: Patch generation error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[patch_generation_agent] warning: Patch generation error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[patch_generation_agent] success: Patch generation complete: 10 patches
+[risk_prioritization_agent] info: Scoring 10 vulnerabilities
+[risk_prioritization_agent] warning: Risk scoring fallback: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[risk_prioritization_agent] success: Risk scoring complete. Overall risk: 75.0/100
+[insight_agent] info: Generating human-level insights for vulnerabilities
+[insight_agent] warning: Insight batch 1 fallback: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[insight_agent] warning: Insight batch 2 fallback: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[insight_agent] success: Insight generation complete: 10 insights
+[alert_reduction_agent] info: Reducing alert fatigue based on graph reachability and risk.
+[alert_reduction_agent] info: Alerts minimized from 10 to 1 actionable findings in prioritized order.
+[report_generation_agent] info: Generating security report
+[report_generation_agent] warning: Report generation fallback: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[report_generation_agent] success: Report generated. Overall risk: High
+[system] success: Scan completed. Found 1 vulnerabilities.
+[recon_agent] info: Starting reconnaissance on 6 files
+[recon_agent] success: Recon complete: 8 entry points, 4 sensitive components found
+[parser_agent] info: Initializing AST syntax tree parser for deterministic layer 1.
+[parser_agent] info: AST Parsing complete: Generated structures for 2 files.
+[static_analysis_agent] info: Starting static analysis on 6 files
+[static_analysis_agent] warning: AI analysis batch 1 fallback: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+[static_analysis_agent] success: Static analysis complete: 10 findings from 6 files
+[graph_agent] info: Building dependency graph from Layer 1 AST Data.
+[graph_agent] info: Graph reasoning complete: NetworkX structure contains 2 connected nodes.
+[heuristic_agent] info: Applying deterministic risk overlays based on path and severity.
+[heuristic_agent] info: Heuristic scoring complete: Assessed risk levels for 0 identified findings.
+[vulnerability_discovery_agent] info: Starting deep vulnerability analysis
+[vulnerability_discovery_agent] info: Analyzing 6 high-priority files
+[vulnerability_discovery_agent] warning: Batch analysis error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[vulnerability_discovery_agent] warning: Batch analysis error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[vulnerability_discovery_agent] success: Vulnerability scan complete: 10 vulnerabilities found
+[exploit_simulation_agent] info: Generating exploit simulations for 10 vulnerabilities
+[exploit_simulation_agent] warning: Exploit simulation error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[exploit_simulation_agent] success: Exploit simulation complete: 10 PoE scripts generated
+[patch_generation_agent] info: Generating patches for 10 vulnerabilities
+[patch_generation_agent] warning: Patch generation error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[patch_generation_agent] warning: Patch generation error: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[patch_generation_agent] success: Patch generation complete: 10 patches
+[risk_prioritization_agent] info: Scoring 10 vulnerabilities
+[risk_prioritization_agent] warning: Risk scoring fallback: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[risk_prioritization_agent] success: Risk scoring complete. Overall risk: 75.0/100
+[insight_agent] info: Generating human-level insights for vulnerabilities
+[insight_agent] warning: Insight batch 1 fallback: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[insight_agent] warning: Insight batch 2 fallback: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[insight_agent] success: Insight generation complete: 10 insights
+[alert_reduction_agent] info: Reducing alert fatigue based on graph reachability and risk.
+[alert_reduction_agent] error: Error: too many values to unpack (expected 2)
+[report_generation_agent] info: Generating security report
+[report_generation_agent] warning: Report generation fallback: No LLM providers available. All providers are either disabled (quota/auth errors) or have no API key configured. Please add a valid API key to backend/.env (GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY).
+[report_generation_agent] success: Report generated. Overall risk: High
+[system] success: Scan completed. Found 10 vulnerabilities.

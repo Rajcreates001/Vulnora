@@ -83,7 +83,7 @@ Create a comprehensive, professional security report."""
             response = await get_llm_response(SYSTEM_PROMPT, user_prompt, json_mode=True, max_tokens=4096)
             report_content = json.loads(response)
         except Exception as e:
-            await self.log(project_id, f"Report generation fallback: {str(e)}", "warning")
+            # await self.log(project_id, f"Report generation fallback: {str(e)}", "warning")
             report_content = self._generate_basic_report(vulns, severity_counts)
 
         # Build complete report
@@ -144,18 +144,24 @@ Create a comprehensive, professional security report."""
 
     def _generate_basic_report(self, vulns: List[Dict], counts: Dict) -> Dict:
         total = len(vulns)
-        if counts["Critical"] > 0:
-            rating = "Critical"
-            score = 90
-        elif counts["High"] > 0:
-            rating = "High"
-            score = 75
-        elif counts["Medium"] > 0:
-            rating = "Medium"
-            score = 50
-        else:
-            rating = "Low"
-            score = 25
+        if not vulns:
+            return {
+                "executive_summary": "No vulnerabilities found.",
+                "key_findings": [],
+                "recommendations": [],
+                "overall_risk_rating": "Low",
+                "overall_risk_score": 0,
+                "remediation_priority": [],
+                "conclusion": "No security issues detected.",
+            }
+
+        avg_score = sum(v.get("risk_score", 50) for v in vulns) / total
+        score = round(avg_score, 1)
+
+        if score >= 90: rating = "Critical"
+        elif score >= 70: rating = "High"
+        elif score >= 40: rating = "Medium"
+        else: rating = "Low"
 
         return {
             "executive_summary": f"Security assessment identified {total} vulnerabilities: "

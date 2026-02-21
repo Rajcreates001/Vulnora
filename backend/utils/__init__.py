@@ -11,8 +11,7 @@ from jwt import PyJWTError
 
 def verify_jwt_token(request: Request):
 	"""Dependency: Verifies JWT in Authorization header."""
-	import os
-	if os.environ.get("VULNORA_DEV_AUTH_BYPASS", "0") == "1":
+	if settings.vulnora_dev_auth_bypass == "1":
 		# Bypass JWT check in dev mode
 		return {"user": "dev-bypass"}
 	auth_header = request.headers.get("Authorization")
@@ -27,8 +26,7 @@ def verify_jwt_token(request: Request):
 
 def verify_api_key(request: Request):
 	"""Dependency: Verifies API key in X-API-Key header."""
-	import os
-	if os.environ.get("VULNORA_DEV_AUTH_BYPASS", "0") == "1":
+	if settings.vulnora_dev_auth_bypass == "1":
 		# Bypass API key check in dev mode
 		return True
 	api_key = request.headers.get("X-API-Key")

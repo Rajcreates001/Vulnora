@@ -16,6 +16,9 @@ from agents import (
     InsightAgent,
     AlertReductionAgent,
     MissedVulnReasoningAgent,
+    ParserAgent,
+    GraphAgent,
+    HeuristicAgent,
 )
 # ─── Agent Node Functions ─────────────────────────────
 
@@ -33,6 +36,21 @@ async def missed_vuln_reasoning_node(state: Dict[str, Any]) -> Dict[str, Any]:
     agent = MissedVulnReasoningAgent()
     state["current_agent"] = "missed_vuln_reasoning_agent"
     return await agent.run(state)
+
+async def parser_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    agent = ParserAgent()
+    state["current_agent"] = "parser_agent"
+    return await agent.run(state)
+
+async def graph_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    agent = GraphAgent()
+    state["current_agent"] = "graph_agent"
+    return await agent.run(state)
+
+async def heuristic_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    agent = HeuristicAgent()
+    state["current_agent"] = "heuristic_agent"
+    return await agent.run(state)
 from db.supabase_client import (
     update_project,
     store_vulnerability,
@@ -48,6 +66,8 @@ from db.vector_store import store_code_embeddings
 class ScanState(TypedDict):
     project_id: str
     files: list
+    ast_data: list
+    graph_data: dict
     recon_results: dict
     static_analysis_results: dict
     vulnerabilities: list
@@ -122,6 +142,8 @@ async def run_security_scan(project_id: str) -> Dict[str, Any]:
     state: Dict[str, Any] = {
         "project_id": project_id,
         "files": [],
+        "ast_data": [],
+        "graph_data": {},
         "recon_results": {},
         "static_analysis_results": {},
         "vulnerabilities": [],
@@ -167,16 +189,19 @@ async def run_security_scan(project_id: str) -> Dict[str, Any]:
         # Execute pipeline in sequence
         pipeline = [
             ("recon", recon_node, "recon_agent", "I'm mapping the project structure, entry points, and attack surface."),
-            ("analysis", static_analysis_node, "static_analysis_agent", "Running Bandit + pattern analysis on the codebase now."),
-            ("analysis", vulnerability_node, "vulnerability_discovery_agent", "Deep-diving into the code to find hidden vulnerabilities."),
+            ("analysis", parser_node, "parser_agent", "Layer 1: Parsing codebase into AST for deterministic analysis."),
+            ("analysis", static_analysis_node, "static_analysis_agent", "Layer 2: Running local Static Analysis tools."),
+            ("analysis", graph_node, "graph_agent", "Layer 3: Building dependency graph from AST."),
+            ("analysis", heuristic_node, "heuristic_agent", "Layer 4: Applying heuristic risk scoring on initial findings."),
+            ("analysis", vulnerability_node, "vulnerability_discovery_agent", "Layer 5: AI-driven deep-dive to find complex logic flaws."),
             ("exploit", exploit_node, "exploit_simulation_agent", "Generating proof-of-exploit scripts for confirmed vulns."),
             ("patch", patch_node, "patch_generation_agent", "Writing production-ready patches for each vulnerability."),
             ("analysis", risk_node, "risk_prioritization_agent", "Computing CVSS-like risk scores for all findings."),
-            ("analysis", alert_reduction_node, "alert_reduction_agent", "Deduplicating, grouping, and prioritizing vulnerabilities to reduce alert fatigue."),
             ("analysis", insight_node, "insight_agent", "Generating human-level insights and context for each vulnerability."),
-            ("analysis", missed_vuln_reasoning_node, "missed_vuln_reasoning_agent", "Explaining why vulnerabilities may have been missed by previous tools/agents."),
-            ("analysis", debate_node, "security_debate_agent", "Red Team vs Blue Team: debating each finding's validity."),
-            ("report", report_node, "report_generation_agent", "Compiling the final security assessment report."),
+            ("analysis", alert_reduction_node, "alert_reduction_agent", "Deduplicating, grouping, and prioritizing vulnerabilities to reduce alert fatigue."),
+            ("analysis", missed_vuln_reasoning_node, "missed_vuln_reasoning_agent", "Analyzing why standard tools might have missed these specific vulnerabilities."),
+            ("analysis", debate_node, "security_debate_agent", "Verifying and debating findings to eliminate false positives."),
+            ("report", report_node, "report_generation_agent", "Compiling the final hybrid security assessment report."),
         ]
 
         for idx, (stage, node_fn, agent_name, intro_msg) in enumerate(pipeline):
@@ -188,7 +213,11 @@ async def run_security_scan(project_id: str) -> Dict[str, Any]:
                     f"Running {agent_name.replace('_', ' ').title()}..."
                 )
                 await broadcast_agent_chat(project_id, agent_name, intro_msg, "info")
-                state = await node_fn(state)
+                
+                result_state = await node_fn(state)
+                if result_state:
+                    state.update(result_state)
+                    
                 # Mark this agent as completed in scan progress
                 done_progress = (idx + 1) / len(pipeline)
                 await update_scan_progress(
@@ -203,6 +232,8 @@ async def run_security_scan(project_id: str) -> Dict[str, Any]:
                 )
             except Exception as e:
                 error_msg = f"Error in {node_fn.__name__}: {str(e)}"
+                if "errors" not in state:
+                    state["errors"] = []
                 state["errors"].append(error_msg)
                 await store_agent_log(project_id, "system", error_msg, "error")
                 await broadcast_agent_chat(project_id, agent_name, f"Hit an error: {str(e)}", "error")
@@ -215,6 +246,9 @@ async def run_security_scan(project_id: str) -> Dict[str, Any]:
                 )
                 # Continue pipeline despite individual agent failures
                 continue
+            finally:
+                # Small delay between agents to avoid rate limiting on LLM providers
+                await asyncio.sleep(1)
 
         # Store vulnerabilities in database
         vulns = state.get("vulnerabilities", [])

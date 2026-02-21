@@ -15,8 +15,10 @@ import {
   Clock,
   ArrowRight,
   AlertTriangle,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { deleteProject } from "@/lib/api";
 
 export default function DashboardPage() {
   const { projects, setProjects, currentProject, scanStatus } =
@@ -42,6 +44,17 @@ export default function DashboardPage() {
     failed: "bg-red-500/20 text-red-400 border-red-500/30",
     pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
     uploaded: "bg-muted text-muted-foreground border-border",
+  };
+
+  const handleDelete = async (projectId: string) => {
+    if (!confirm("Are you sure you want to delete this project?")) return;
+    try {
+      await deleteProject(projectId);
+      setProjects(projects.filter(p => p.id !== projectId));
+    } catch (e) {
+      console.error("Failed to delete project", e);
+      alert("Failed to delete project");
+    }
   };
 
   return (
@@ -140,16 +153,26 @@ export default function DashboardPage() {
                           </span>
                         )}
                     </div>
-                    <Link href={`/results/${project.id}`}>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Link href={`/results/${project.id}`} className="flex-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full gap-1 text-xs"
+                        >
+                          View Results
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full gap-1 text-xs"
+                        className="text-red-400 hover:text-red-500 hover:bg-red-500/10"
+                        onClick={() => handleDelete(project.id)}
                       >
-                        View Results
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    </Link>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>

@@ -31,7 +31,8 @@ async def handle_zip_upload(file_content: bytes, filename: str, project_name: st
 
     # Collect and store files
     t4 = time.time()
-    files = collect_files(extract_dir)
+    import asyncio
+    files = await asyncio.to_thread(collect_files, extract_dir)
     print(f"[UPLOAD] Collected {len(files)} files in {time.time()-t4:.2f}s")
     t5 = time.time()
     import asyncio
@@ -88,7 +89,8 @@ async def handle_github_upload(repo_url: str, project_name: str) -> Dict[str, An
 
     # Collect and store files
     t2 = time.time()
-    files = collect_files(clone_dir)
+    import asyncio
+    files = await asyncio.to_thread(collect_files, clone_dir)
     print(f"[UPLOAD] Collected {len(files)} files in {time.time()-t2:.2f}s")
     t3 = time.time()
     import asyncio

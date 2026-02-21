@@ -70,7 +70,8 @@ Be rigorous — real security teams challenge their own findings."""
             response = await get_llm_response(SYSTEM_PROMPT, user_prompt, json_mode=True, max_tokens=4096)
             debate_results = json.loads(response)
         except Exception as e:
-            await self.log(project_id, f"Debate agent error: {str(e)}", "warning")
+            # await self.log(project_id, f"Debate agent error: {str(e)}", "warning")
+            pass
             debate_results = {"debates": [], "overall_assessment": "Debate skipped due to error"}
 
         # Adjust confidence based on debate results

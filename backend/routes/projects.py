@@ -74,6 +74,20 @@ async def get_project_detail(
     return APIResponse(success=True, data=project)
 
 
+@router.delete("/projects/{project_id}")
+async def remove_project(
+    project_id: str,
+    jwt_payload: dict = Depends(verify_jwt_token),
+    api_key_ok: bool = Depends(verify_api_key),
+):
+    """Delete a project and its associated scan results."""
+    from db.supabase_client import delete_project
+    success = await delete_project(project_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Project not found or already deleted")
+    return APIResponse(success=True, message="Project deleted successfully")
+
+
 @router.get("/files/{file_id}")
 async def get_file(
     file_id: str,

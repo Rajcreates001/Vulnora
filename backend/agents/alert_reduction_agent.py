@@ -1,49 +1,45 @@
-"""Alert Reduction Agent — Deduplicates, groups, and prioritizes vulnerabilities to reduce alert fatigue."""
+import logging
+from typing import Dict, Any
 
-from agents.base_agent import BaseAgent
-from db.redis_client import update_scan_progress
-from typing import Any, Dict, List
-import hashlib
+from db.supabase_client import store_agent_log
+from models.schemas import AgentState
+from analysis.heuristics.alert_reducer import reduce_alerts, verify_reachability
 
-class AlertReductionAgent(BaseAgent):
-    name = "alert_reduction_agent"
-    description = "Deduplicates, groups, and prioritizes vulnerabilities to reduce alert fatigue."
+logger = logging.getLogger(__name__)
 
-    async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        project_id = state["project_id"]
-        vulns = state.get("vulnerabilities", [])
-        await self.log(project_id, "Reducing alert fatigue: deduplication, grouping, prioritization")
-        await update_scan_progress(project_id, "analysis", self.name, 0.1, "Reducing alert fatigue...")
-
-        # Deduplicate by hash of title+location+type
-        seen = set()
-        deduped = []
-        for v in vulns:
-            key = hashlib.sha256(f"{v.get('title','')}-{v.get('location','')}-{v.get('type','')}".encode()).hexdigest()
-            if key not in seen:
-                seen.add(key)
-                deduped.append(v)
-
-        # Group by type
-        grouped = {}
-        for v in deduped:
-            t = v.get("type", "Other")
-            grouped.setdefault(t, []).append(v)
-
-        # Prioritize: critical > high > medium > low > info
-        severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
-        prioritized = []
-        for t, vulns in grouped.items():
-            vulns.sort(key=lambda v: severity_order.get(v.get("severity", "medium").lower(), 2))
-            prioritized.extend(vulns)
-
-        state["vulnerabilities"] = prioritized
-        state["alert_reduction"] = {
-            "deduplicated_count": len(deduped),
-            "grouped_types": list(grouped.keys()),
-            "prioritized_count": len(prioritized)
-        }
-        await self.save_output(project_id, state["alert_reduction"])
-        await self.log(project_id, f"Alert reduction complete: {len(prioritized)} prioritized", "success")
-        await update_scan_progress(project_id, "analysis", self.name, 1.0, "Alert reduction complete")
-        return state
+class AlertReductionAgent:
+    """Layer 5 Overlays: Minimize Alert Fatigue."""
+    
+    async def run(self, state: AgentState) -> Dict[str, Any]:
+        project_id = state.get("project_id", "")
+        await store_agent_log(project_id, "alert_reduction_agent", "Reducing alert fatigue based on graph reachability and risk.")
+        
+        try:
+            vulns = state.get("vulnerabilities", []).copy()
+            
+            # Use deterministic reducer
+            graph_engine = None
+            graph_data = state.get("graph_data")
+            if graph_data:
+                from analysis.graph.engine import DependencyGraph
+                from networkx.readwrite import json_graph
+                graph_engine = DependencyGraph()
+                graph_engine.graph = json_graph.node_link_graph(graph_data)
+                
+            vulns = verify_reachability(vulns, graph_engine)
+            final_vulns = reduce_alerts(vulns)
+            
+            await store_agent_log(
+                project_id, 
+                "alert_reduction_agent", 
+                f"Alerts minimized from {len(state.get('vulnerabilities', []))} to {len(final_vulns)} actionable findings in prioritized order."
+            )
+            
+            return {
+                "vulnerabilities": final_vulns,
+                "current_agent": "alert_reduction_agent"
+            }
+        except Exception as e:
+            logger.error(f"Alert reduction agent failed: {e}")
+            await store_agent_log(project_id, "alert_reduction_agent", f"Error: {str(e)}", log_type="error")
+            return {"errors": state.get("errors", []) + [str(e)]}

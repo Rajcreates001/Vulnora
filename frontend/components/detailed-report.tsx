@@ -123,9 +123,10 @@ export function DetailedReport({ projectId }: DetailedReportProps) {
       try {
         const res = await fetch(`${API_BASE}/api/report/${projectId}`);
         if (res.ok) {
-          const data = await res.json();
-          setReport(data.report);
-          setDebates(data.debate_results || []);
+          const json = await res.json();
+          const payload = json.data || json;
+          setReport(payload.report);
+          setDebates(payload.debate_results || []);
         }
       } catch (e) {
         console.error("Failed to load report:", e);
@@ -449,13 +450,12 @@ export function DetailedReport({ projectId }: DetailedReportProps) {
                 >
                   <Badge
                     variant="outline"
-                    className={`text-[10px] shrink-0 ${
-                      item.priority === "Immediate"
+                    className={`text-[10px] shrink-0 ${item.priority === "Immediate"
                         ? "text-red-400 border-red-500/30"
                         : item.priority === "Short-term"
-                        ? "text-yellow-400 border-yellow-500/30"
-                        : "text-green-400 border-green-500/30"
-                    }`}
+                          ? "text-yellow-400 border-yellow-500/30"
+                          : "text-green-400 border-green-500/30"
+                      }`}
                   >
                     {item.priority}
                   </Badge>

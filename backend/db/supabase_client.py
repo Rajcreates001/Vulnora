@@ -61,6 +61,11 @@ async def update_project(project_id: str, updates: Dict[str, Any]) -> Dict[str, 
     return result.data[0] if result.data else {}
 
 
+async def delete_project(project_id: str) -> bool:
+    db = get_supabase()
+    result = db.table("projects").delete().eq("id", project_id).execute()
+    return bool(result.data)
+
 # ─── Files ────────────────────────────────────────────
 
 async def store_file(project_id: str, file_path: str, content: str, language: Optional[str] = None) -> Dict[str, Any]:

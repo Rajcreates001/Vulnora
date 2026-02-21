@@ -13,7 +13,13 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
     throw new Error(error.detail || `API Error: ${res.status}`);
   }
 
-  return res.json();
+  const json = await res.json();
+  // Backend wraps all responses in { success, message, data }
+  // Unwrap the data field for callers
+  if (json && typeof json === "object" && "success" in json && "data" in json) {
+    return json.data as T;
+  }
+  return json as T;
 }
 
 // ─── Projects ─────────────────────────────────────
@@ -27,7 +33,11 @@ export async function uploadRepo(formData: FormData) {
     const err = await res.json().catch(() => ({ detail: "Upload failed" }));
     throw new Error(err.detail);
   }
-  return res.json();
+  const json = await res.json();
+  if (json && typeof json === "object" && "success" in json && "data" in json) {
+    return json.data;
+  }
+  return json;
 }
 
 export async function getProjects() {
@@ -36,6 +46,12 @@ export async function getProjects() {
 
 export async function getProject(id: string) {
   return fetchAPI<any>(`/api/projects/${id}`);
+}
+
+export async function deleteProject(id: string) {
+  return fetchAPI<{ success: boolean; message: string }>(`/api/projects/${id}`, {
+    method: "DELETE",
+  });
 }
 
 // ─── Scanning ─────────────────────────────────────

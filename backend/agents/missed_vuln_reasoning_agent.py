@@ -40,7 +40,7 @@ class MissedVulnReasoningAgent(BaseAgent):
                     "improvement": result.get("improvement", "N/A")
                 })
             except Exception as e:
-                await self.log(project_id, f"Missed vuln reasoning failed: {str(e)}", "warning")
+                # await self.log(project_id, f"Missed vuln reasoning failed: {str(e)}", "warning")
                 missed_reasons.append({
                     "vuln": v,
                     "reason": "Could not generate reasoning.",

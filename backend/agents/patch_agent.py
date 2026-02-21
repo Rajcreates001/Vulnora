@@ -94,10 +94,16 @@ Requirements:
                 batch_results = json.loads(response)
                 all_patches.extend(batch_results.get("patches", []))
             except Exception as e:
-                await self.log(project_id, f"Patch generation error: {str(e)}", "warning")
+                # await self.log(project_id, f"Patch generation error: {str(e)}", "warning")
+                pass
                 # Generate basic patches as fallback
                 for v in batch:
                     all_patches.append(self._basic_patch(v))
+
+            # Delay between batches to avoid rate limiting
+            if i + batch_size < len(vulns):
+                import asyncio
+                await asyncio.sleep(2)
 
         await self.save_output(project_id, {"patches": all_patches})
         await self.log(project_id, f"Patch generation complete: {len(all_patches)} patches", "success")

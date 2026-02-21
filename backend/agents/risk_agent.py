@@ -77,7 +77,7 @@ Provide accurate CVSS-like scoring for each vulnerability."""
             response = await get_llm_response(SYSTEM_PROMPT, user_prompt, json_mode=True)
             risk_results = json.loads(response)
         except Exception as e:
-            await self.log(project_id, f"Risk scoring fallback: {str(e)}", "warning")
+            # await self.log(project_id, f"Risk scoring fallback: {str(e)}", "warning")
             risk_results = self._fallback_scoring(vulns)
 
         # Merge scores back into vulnerabilities

@@ -32,10 +32,18 @@ class Settings(BaseSettings):
     # GitHub
     github_token: Optional[str] = None
 
+    # Local LLM
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.2"
+
     # Auth
     jwt_secret: str = "change-this-secret-in-prod"
     jwt_algorithm: str = "HS256"
     api_key: Optional[str] = None  # Set to a strong value in .env for API key auth
+    vulnora_dev_auth_bypass: str = "0"  # Set to "1" in .env to skip JWT/API key checks
+
+    # Groq (free tier LLM)
+    groq_api_key: str = ""
 
     class Config:
         env_file = ".env"

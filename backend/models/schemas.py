@@ -94,8 +94,10 @@ class VulnerabilityResponse(BaseModel):
     cwe_id: Optional[str] = None
     cvss_vector: Optional[str] = None
     attack_path: Optional[List[Dict[str, Any]]] = None
+    why_missed: Optional[str] = None
+    exploit_probability: Optional[float] = None
+    priority_rank: Optional[int] = None
     created_at: str
-
 
 class VulnerabilityListResponse(BaseModel):
     vulnerabilities: List[VulnerabilityResponse]
@@ -182,6 +184,8 @@ class AttackPathGraph(BaseModel):
 class AgentState(BaseModel):
     project_id: str
     files: List[Dict[str, Any]] = []
+    ast_data: List[Dict[str, Any]] = []
+    graph_data: Optional[Dict[str, Any]] = None
     recon_results: Optional[Dict[str, Any]] = None
     static_analysis_results: Optional[Dict[str, Any]] = None
     vulnerabilities: List[Dict[str, Any]] = []

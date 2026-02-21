@@ -1,6 +1,9 @@
 """Vulnora - Autonomous Security Research Agent - Backend API."""
 
 import os
+from dotenv import load_dotenv
+load_dotenv()  # Load .env into os.environ before anything else
+
 from contextlib import asynccontextmanager
 
 

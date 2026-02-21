@@ -1,0 +1,7 @@
+Recent projects:
+Project: aquaintel (24e740c8-cd5f-45f3-a06b-eca71ad0cd8b) Status: analysis
+Files in DB: 6
+Project: Aquaintel (9689b490-5ddd-4302-94ca-e651a52db551) Status: analysis
+Files in DB: 6
+Project: lifelink (92883496-7cb7-43dc-a3dd-62a6065416aa) Status: completed
+Files in DB: 90

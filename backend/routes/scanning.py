@@ -195,14 +195,15 @@ async def get_report(
             severity_counts[sev] = severity_counts.get(sev, 0) + 1
 
         total = len(vulns)
-        if severity_counts["Critical"] > 0:
-            rating = "Critical"
-        elif severity_counts["High"] > 0:
-            rating = "High"
-        elif severity_counts["Medium"] > 0:
-            rating = "Medium"
-        else:
-            rating = "Low"
+        avg_score = 0
+        if total > 0:
+            avg_score = sum(v.get("risk_score", 50) for v in vulns) / total
+        score = round(avg_score, 1)
+
+        if score >= 90: rating = "Critical"
+        elif score >= 70: rating = "High"
+        elif score >= 40: rating = "Medium"
+        else: rating = "Low"
 
         report = {
             "executive_summary": f"Security assessment identified {total} vulnerabilities.",
@@ -212,6 +213,7 @@ async def get_report(
             "medium_count": severity_counts["Medium"],
             "low_count": severity_counts["Low"],
             "overall_risk_rating": rating,
+            "overall_risk_score": score,
             "key_findings": [v.get("title", "") for v in vulns[:5]],
             "recommendations": ["Address all critical vulnerabilities immediately"],
             "conclusion": f"The application needs security improvements. {severity_counts['Critical'] + severity_counts['High']} high-priority issues require remediation.",

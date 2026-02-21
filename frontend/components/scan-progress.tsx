@@ -89,10 +89,12 @@ export function ScanProgress({ projectId, scanStatus: initialStatus, onComplete 
         <CardTitle className="text-base flex items-center gap-2">
           {failed ? (
             <AlertCircle className="h-5 w-5 text-red-400" />
+          ) : status?.status === "completed" ? (
+            <CheckCircle2 className="h-5 w-5 text-green-400" />
           ) : (
             <Loader2 className="h-5 w-5 animate-spin text-blue-400" />
           )}
-          {failed ? "Scan Failed" : "Security Scan In Progress"}
+          {failed ? "Scan Failed" : status?.status === "completed" ? "Scan Completed" : "Security Scan In Progress"}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -127,22 +129,20 @@ export function ScanProgress({ projectId, scanStatus: initialStatus, onComplete 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.08, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className={`flex items-center gap-4 rounded-lg border p-3 transition-all duration-300 ${
-                  stageStatus === "active"
+                className={`flex items-center gap-4 rounded-lg border p-3 transition-all duration-300 ${stageStatus === "active"
                     ? "border-blue-500/50 bg-blue-500/5 shadow-lg shadow-blue-500/10"
                     : stageStatus === "completed"
-                    ? "border-green-500/30 bg-green-500/5"
-                    : "border-border/50 bg-card/30"
-                }`}
+                      ? "border-green-500/30 bg-green-500/5"
+                      : "border-border/50 bg-card/30"
+                  }`}
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors duration-300 ${
-                    stageStatus === "active"
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors duration-300 ${stageStatus === "active"
                       ? "bg-blue-500/20 text-blue-400"
                       : stageStatus === "completed"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-muted text-muted-foreground"
+                    }`}
                 >
                   {stageStatus === "active" ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -154,11 +154,10 @@ export function ScanProgress({ projectId, scanStatus: initialStatus, onComplete 
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${
-                    stageStatus === "active" ? "text-blue-400" :
-                    stageStatus === "completed" ? "text-green-400" :
-                    "text-muted-foreground"
-                  }`}>
+                  <p className={`text-sm font-medium ${stageStatus === "active" ? "text-blue-400" :
+                      stageStatus === "completed" ? "text-green-400" :
+                        "text-muted-foreground"
+                    }`}>
                     {stage.label}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">{stage.description}</p>
