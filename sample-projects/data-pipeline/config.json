@@ -1,0 +1,5 @@
+{
+    "name": "vulnerable-data-pipeline",
+    "version": "1.0.0",
+    "description": "Intentionally vulnerable data processing app for security testing"
+}

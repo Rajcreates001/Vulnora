@@ -1,0 +1,77 @@
+# ============================================
+# VULNORA - Git Ignore
+# ============================================
+
+# ----- Python -----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+*.manifest
+venv/
+.venv/
+env/
+.env/
+
+# ----- Node.js -----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# ----- Next.js -----
+frontend/.next/
+.next/
+out/
+
+# ----- Environment & Secrets -----
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+*.env
+!*.env.example
+
+# ----- Backend Runtime -----
+backend/uploads/
+backend/data/
+backend/temp/
+backend/*.db
+backend/*.sqlite
+
+# ----- IDE -----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ----- OS -----
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ----- Logs & Cache -----
+*.log
+logs/
+.cache/
+
+# ----- Build outputs -----
+*.tsbuildinfo
+.turbo/
+
+# ----- Testing -----
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/

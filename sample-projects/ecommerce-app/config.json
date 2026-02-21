@@ -1,0 +1,5 @@
+{
+    "name": "vulnerable-ecommerce",
+    "version": "1.0.0",
+    "description": "Intentionally vulnerable e-commerce app for security testing"
+}
