@@ -119,7 +119,7 @@ Instructions:
             # Small delay between batches to avoid rate limiting
             if batch_idx < len(file_batches) - 1:
                 import asyncio
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.2)  # Minimal delay
 
         # Deduplicate findings
         seen = set()

@@ -177,14 +177,14 @@ async def run_security_scan(project_id: str) -> Dict[str, Any]:
             await update_project(project_id, {"scan_status": "failed"})
             return {"error": "No files found in project"}
 
-        # Store code embeddings for vector search
+        # Store code embeddings for vector search (non-blocking, skip if slow)
         try:
-            docs = [f["content"][:1000] for f in state["files"]]
-            metas = [{"file_path": f["file_path"], "language": f["language"]} for f in state["files"]]
-            ids = [f"file_{i}" for i in range(len(state["files"]))]
-            await store_code_embeddings(project_id, docs, metas, ids)
-        except Exception as e:
-            await store_agent_log(project_id, "system", f"Vector store warning: {str(e)}", "warning")
+            docs = [f["content"][:500] for f in state["files"][:20]]  # Limit for speed
+            metas = [{"file_path": f["file_path"], "language": f["language"]} for f in state["files"][:20]]
+            ids = [f"file_{i}" for i in range(len(docs))]
+            await asyncio.wait_for(store_code_embeddings(project_id, docs, metas, ids), timeout=5)
+        except Exception:
+            pass  # Skip silently — not critical for scan
 
         # Execute pipeline in sequence
         pipeline = [
@@ -247,8 +247,7 @@ async def run_security_scan(project_id: str) -> Dict[str, Any]:
                 # Continue pipeline despite individual agent failures
                 continue
             finally:
-                # Small delay between agents to avoid rate limiting on LLM providers
-                await asyncio.sleep(1)
+                pass  # No delay needed between agents
 
         # Store vulnerabilities in database
         vulns = state.get("vulnerabilities", [])

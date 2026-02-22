@@ -99,7 +99,7 @@ VULNERABILITIES:
 
             # Delay between batches to avoid rate limiting
             if i + batch_size < len(vulns):
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.2)  # Minimal delay
 
         state["insights"] = insights
         await self.save_output(project_id, {"insights": insights})

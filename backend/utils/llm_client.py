@@ -16,13 +16,13 @@ _anthropic_client = None
 _groq_client = None
 _ollama_client = None
 
-MAX_RETRIES = 3
-RETRY_DELAYS = [2, 8, 20]
+MAX_RETRIES = 2
+RETRY_DELAYS = [1, 3]
 
 # Time-based provider disable: provider -> expiry timestamp
-# Providers are disabled for 5 minutes, then re-enabled automatically
+# Providers are disabled for 60 seconds, then re-enabled automatically
 _disabled_until: Dict[str, float] = {}
-DISABLE_DURATION = 300  # seconds (5 min)
+DISABLE_DURATION = 60  # seconds
 
 # Quota / auth errors → disable the provider temporarily
 QUOTA_ERROR_KEYWORDS = [

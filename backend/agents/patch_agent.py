@@ -103,7 +103,7 @@ Requirements:
             # Delay between batches to avoid rate limiting
             if i + batch_size < len(vulns):
                 import asyncio
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.2)  # Minimal delay
 
         await self.save_output(project_id, {"patches": all_patches})
         await self.log(project_id, f"Patch generation complete: {len(all_patches)} patches", "success")
