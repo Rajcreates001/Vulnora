@@ -70,7 +70,9 @@ Provide a comprehensive security reconnaissance report in JSON format."""
             response = await get_llm_response(SYSTEM_PROMPT, user_prompt, json_mode=True)
             recon_results = json.loads(response)
         except (json.JSONDecodeError, Exception) as e:
-            # await self.log(project_id, f"LLM analysis fallback: {str(e)}", "warning")
+            error_msg = f"LLM analysis fallback: {str(e)}"
+            print(f"[RECON] {project_id}: {error_msg}")
+            await self.log(project_id, error_msg, "warning")
             recon_results = self._fallback_analysis(file_structures)
 
         recon_results["file_structures"] = file_structures

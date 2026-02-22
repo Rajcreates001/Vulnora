@@ -58,11 +58,13 @@ export function ScanProgress({ projectId, scanStatus: initialStatus, onComplete 
         if (data.status === "completed") {
           clearInterval(interval);
           setOverallProgress(100);
+          setStatus(data); // Ensure final status is set
           onComplete?.();
         } else if (data.status === "failed") {
           clearInterval(interval);
           setFailed(true);
           setErrorMessage(data.message || "Scan failed");
+          setStatus(data); // Ensure final status is set
           onComplete?.();
         }
       } catch {

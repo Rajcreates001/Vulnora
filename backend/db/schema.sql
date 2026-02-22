@@ -82,3 +82,85 @@ CREATE POLICY "Allow all for service role" ON projects FOR ALL USING (true);
 CREATE POLICY "Allow all for service role" ON files FOR ALL USING (true);
 CREATE POLICY "Allow all for service role" ON vulnerabilities FOR ALL USING (true);
 CREATE POLICY "Allow all for service role" ON agent_logs FOR ALL USING (true);
+
+-- ============================================
+-- VERDEXA 2.0 — New Tables
+-- ============================================
+
+-- Repo Analysis Results — links security scans to candidate evaluations
+CREATE TABLE IF NOT EXISTS repo_analysis_results (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    candidate_id UUID,
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    security_intelligence_index FLOAT DEFAULT 0,
+    security_intelligence_data JSONB DEFAULT '{}',
+    skill_inflation_score FLOAT DEFAULT 0,
+    skill_inflation_data JSONB DEFAULT '{}',
+    total_vulnerabilities INTEGER DEFAULT 0,
+    critical_count INTEGER DEFAULT 0,
+    high_count INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_repo_analysis_project ON repo_analysis_results(project_id);
+CREATE INDEX IF NOT EXISTS idx_repo_analysis_candidate ON repo_analysis_results(candidate_id);
+
+-- Security Reports — stored reports from completed scans
+CREATE TABLE IF NOT EXISTS security_reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    report_data JSONB DEFAULT '{}',
+    executive_summary TEXT,
+    overall_risk_rating TEXT,
+    overall_risk_score FLOAT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_reports_project ON security_reports(project_id);
+
+-- Add security intelligence columns to candidates (if table exists)
+ALTER TABLE candidates ADD COLUMN IF NOT EXISTS github_repo_url TEXT;
+ALTER TABLE candidates ADD COLUMN IF NOT EXISTS repo_project_id UUID;
+
+-- ============================================
+-- URL / Website Security Scans
+-- ============================================
+CREATE TABLE IF NOT EXISTS url_scans (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    target_url TEXT NOT NULL,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending','crawling','scanning','analyzing','completed','failed')),
+    security_posture_score INTEGER DEFAULT 0,
+    crawl_data JSONB DEFAULT '{}',
+    vulnerabilities JSONB DEFAULT '[]',
+    attack_paths JSONB DEFAULT '[]',
+    summary JSONB DEFAULT '{}',
+    agent_logs JSONB DEFAULT '[]',
+    report_json JSONB DEFAULT '{}',
+    error_message TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_url_scans_status ON url_scans(status);
+CREATE INDEX IF NOT EXISTS idx_url_scans_created ON url_scans(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS url_scan_vulnerabilities (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    scan_id UUID NOT NULL,
+    title TEXT,
+    severity TEXT,
+    endpoint TEXT,
+    parameter TEXT,
+    description TEXT,
+    payload TEXT,
+    evidence TEXT,
+    impact TEXT,
+    exploit_steps JSONB DEFAULT '[]',
+    patch_recommendation TEXT,
+    risk_score INTEGER DEFAULT 0,
+    confidence INTEGER DEFAULT 0,
+    why_missed TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_url_scan_vulns_scan ON url_scan_vulnerabilities(scan_id);

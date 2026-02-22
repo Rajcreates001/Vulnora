@@ -1,199 +1,168 @@
+"""Pydantic schemas for API request/response validation."""
 
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Any, Dict
 from datetime import datetime
-from enum import Enum
+from uuid import UUID
+
+AgentState = Dict[str, Any]
+
+
+# ──────────────────── API Response ────────────────────
 
 class APIResponse(BaseModel):
     success: bool
-    message: Optional[str] = None
     data: Optional[Any] = None
+    message: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
 
 
-# ─── Enums ────────────────────────────────────────────
+# ──────────────────── Candidate Schemas ────────────────────
 
-class SeverityLevel(str, Enum):
-    CRITICAL = "Critical"
-    HIGH = "High"
-    MEDIUM = "Medium"
-    LOW = "Low"
-
-
-class ScanStatus(str, Enum):
-    PENDING = "pending"
-    RECON = "recon"
-    ANALYSIS = "analysis"
-    EXPLOIT = "exploit"
-    PATCH = "patch"
-    REPORT = "report"
-    COMPLETED = "completed"
-    FAILED = "failed"
+class CandidateCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    email: Optional[str] = None
+    resume_text: str = Field(..., min_length=10)
+    transcript_text: Optional[str] = ""
+    job_description: str = Field(..., min_length=10)
 
 
-# ─── Project Models ───────────────────────────────────
-
-class ProjectCreate(BaseModel):
+class CandidateResponse(BaseModel):
+    id: UUID
     name: str
-    repo_url: Optional[str] = None
+    email: Optional[str]
+    status: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
 
 
-class ProjectResponse(BaseModel):
-    id: str
-    name: str
-    repo_path: Optional[str] = None
-    scan_status: ScanStatus = ScanStatus.PENDING
-    created_at: str
-    file_count: int = 0
-    vulnerability_count: int = 0
+class CandidateDetail(CandidateResponse):
+    resume_text: str
+    transcript_text: str
+    job_description: str
+
+    class Config:
+        from_attributes = True
 
 
-class ProjectListResponse(BaseModel):
-    projects: List[ProjectResponse]
-    total: int
+# ──────────────────── Score Schemas ────────────────────
+
+class SkillGap(BaseModel):
+    skill: str
+    current_level: str
+    required_level: str
+    gap_severity: str  # low, medium, high
+    training_estimate: str
 
 
-# ─── File Models ──────────────────────────────────────
-
-class FileInfo(BaseModel):
-    id: str
-    project_id: str
-    file_path: str
-    language: Optional[str] = None
-    size: int = 0
+class Contradiction(BaseModel):
+    claim: str
+    evidence: str
+    severity: str  # low, medium, high, critical
+    explanation: str
 
 
-# ─── Vulnerability Models ────────────────────────────
-
-class VulnerabilityScore(BaseModel):
-    severity: SeverityLevel
-    risk_score: float = Field(ge=0, le=100)
-    confidence: float = Field(ge=0, le=100)
-    exploitability: float = Field(ge=0, le=100)
-    impact: float = Field(ge=0, le=100)
-
-
-class VulnerabilityResponse(BaseModel):
-    id: str
-    project_id: str
-    title: str
-    vulnerability_type: str
-    severity: SeverityLevel
-    description: str
-    file_path: str
-    line_start: int
-    line_end: int
-    vulnerable_code: str
-    exploit: Optional[str] = None
-    exploit_script: Optional[str] = None
-    patch: Optional[str] = None
-    patch_explanation: Optional[str] = None
-    risk_score: float
+class AgentOpinion(BaseModel):
+    agent_name: str
+    role: str
+    decision: str  # hire, no_hire, conditional
     confidence: float
-    exploitability: float
-    impact: float
-    cwe_id: Optional[str] = None
-    cvss_vector: Optional[str] = None
-    attack_path: Optional[List[Dict[str, Any]]] = None
-    why_missed: Optional[str] = None
-    exploit_probability: Optional[float] = None
-    priority_rank: Optional[int] = None
-    created_at: str
-
-class VulnerabilityListResponse(BaseModel):
-    vulnerabilities: List[VulnerabilityResponse]
-    total: int
-    critical_count: int = 0
-    high_count: int = 0
-    medium_count: int = 0
-    low_count: int = 0
+    reasoning: str
+    key_concerns: List[str] = []
+    key_strengths: List[str] = []
 
 
-# ─── Agent Log Models ────────────────────────────────
-
-class AgentLogResponse(BaseModel):
-    id: str
-    project_id: str
+class DebateMessage(BaseModel):
     agent_name: str
     message: str
-    log_type: str = "info"
-    data: Optional[Dict[str, Any]] = None
-    timestamp: str
+    stance: str
+    responding_to: Optional[str] = None
+    timestamp: Optional[str] = None
 
 
-class AgentLogListResponse(BaseModel):
-    logs: List[AgentLogResponse]
-    total: int
+class WhyNotHire(BaseModel):
+    major_weaknesses: List[str]
+    evidence: List[str]
+    risk_justification: str
+    improvement_suggestions: List[str]
+    thirty_day_plan: Optional[List[str]] = None
 
 
-# ─── Scan Models ──────────────────────────────────────
-
-class ScanStartRequest(BaseModel):
-    project_id: str
-
-
-class ScanStatusResponse(BaseModel):
-    project_id: str
-    status: ScanStatus
-    current_agent: Optional[str] = None
-    progress: float = 0.0
-    agents_completed: List[str] = []
-    message: Optional[str] = None
+class RiskAnalysis(BaseModel):
+    hiring_risk_score: float
+    learning_potential_score: float
+    attrition_risk: float
+    confidence_percentage: float
+    risk_factors: List[str]
+    mitigating_factors: List[str]
 
 
-# ─── Report Models ────────────────────────────────────
-
-class SecurityReport(BaseModel):
-    project_id: str
-    executive_summary: str
-    total_vulnerabilities: int
-    critical_count: int
-    high_count: int
-    medium_count: int
-    low_count: int
-    overall_risk_score: float
-    vulnerabilities: List[VulnerabilityResponse]
-    attack_paths: List[Dict[str, Any]]
-    recommendations: List[str]
-    agent_logs: List[AgentLogResponse]
-    generated_at: str
+class ImprovementRoadmap(BaseModel):
+    week_1: List[str]
+    week_2: List[str]
+    week_3: List[str]
+    week_4: List[str]
+    resources: List[str]
 
 
-# ─── Attack Path Models ──────────────────────────────
+# ──────────────────── Evaluation Schemas ────────────────────
 
-class AttackPathNode(BaseModel):
-    id: str
-    label: str
-    node_type: str  # entry_point, function, database, exploit_outcome
-    data: Optional[Dict[str, Any]] = None
+class EvaluationResponse(BaseModel):
+    id: UUID
+    candidate_id: UUID
+    technical_score: float
+    behavior_score: float
+    risk_score: float
+    learning_potential: float
+    confidence: float
+    domain_score: float
+    communication_score: float
+    final_decision: str
+    reasoning: Optional[str]
+    scores_json: Optional[dict]
+    skill_gaps: Optional[List[SkillGap]]
+    contradictions: Optional[List[Contradiction]]
+    why_not_hire: Optional[WhyNotHire]
+    improvement_roadmap: Optional[ImprovementRoadmap]
+    agent_debate: Optional[List[DebateMessage]]
+    risk_analysis: Optional[RiskAnalysis]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
-class AttackPathEdge(BaseModel):
-    id: str
-    source: str
-    target: str
-    label: Optional[str] = None
+class EvaluationSummary(BaseModel):
+    candidate_id: UUID
+    candidate_name: str
+    final_decision: str
+    confidence: float
+    technical_score: float
+    risk_score: float
+    created_at: datetime
 
 
-class AttackPathGraph(BaseModel):
-    nodes: List[AttackPathNode]
-    edges: List[AttackPathEdge]
+# ──────────────────── Agent Log Schemas ────────────────────
+
+class AgentLogResponse(BaseModel):
+    id: UUID
+    candidate_id: UUID
+    agent_name: str
+    message: str
+    agent_role: Optional[str]
+    phase: Optional[str]
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
 
 
-# ─── LangGraph State ─────────────────────────────────
+# ──────────────────── Run Evaluation Request ────────────────────
 
-class AgentState(BaseModel):
-    project_id: str
-    files: List[Dict[str, Any]] = []
-    ast_data: List[Dict[str, Any]] = []
-    graph_data: Optional[Dict[str, Any]] = None
-    recon_results: Optional[Dict[str, Any]] = None
-    static_analysis_results: Optional[Dict[str, Any]] = None
-    vulnerabilities: List[Dict[str, Any]] = []
-    exploits: List[Dict[str, Any]] = []
-    patches: List[Dict[str, Any]] = []
-    risk_scores: List[Dict[str, Any]] = []
-    debate_results: List[Dict[str, Any]] = []
-    report: Optional[Dict[str, Any]] = None
-    current_agent: str = ""
-    logs: List[Dict[str, Any]] = []
-    errors: List[str] = []
+class RunEvaluationRequest(BaseModel):
+    candidate_id: UUID

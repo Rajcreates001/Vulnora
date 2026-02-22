@@ -35,7 +35,6 @@ async def handle_zip_upload(file_content: bytes, filename: str, project_name: st
     files = await asyncio.to_thread(collect_files, extract_dir)
     print(f"[UPLOAD] Collected {len(files)} files in {time.time()-t4:.2f}s")
     t5 = time.time()
-    import asyncio
     from db.supabase_client import store_agent_log
     async def store_one(f):
         rel_path, content, language = f
@@ -67,8 +66,12 @@ async def handle_zip_upload(file_content: bytes, filename: str, project_name: st
     os.unlink(tmp.name)
 
     return {
+        "id": project_id,
         "project_id": project_id,
         "name": project_name,
+        "repo_path": extract_dir,
+        "scan_status": "pending",
+        "created_at": project.get("created_at", ""),
         "file_count": len(files),
         "files": [{"path": f[0], "language": f[2]} for f in files],
     }
@@ -93,7 +96,6 @@ async def handle_github_upload(repo_url: str, project_name: str) -> Dict[str, An
     files = await asyncio.to_thread(collect_files, clone_dir)
     print(f"[UPLOAD] Collected {len(files)} files in {time.time()-t2:.2f}s")
     t3 = time.time()
-    import asyncio
     from db.supabase_client import store_agent_log
     async def store_one(f):
         rel_path, content, language = f
@@ -122,8 +124,12 @@ async def handle_github_upload(repo_url: str, project_name: str) -> Dict[str, An
     print(f"[UPLOAD] Total repo clone+store time: {time.time()-start_total:.2f}s")
 
     return {
+        "id": project_id,
         "project_id": project_id,
         "name": project_name,
+        "repo_path": clone_dir,
+        "scan_status": "pending",
+        "created_at": project.get("created_at", ""),
         "file_count": len(files),
         "files": [{"path": f[0], "language": f[2]} for f in files],
     }

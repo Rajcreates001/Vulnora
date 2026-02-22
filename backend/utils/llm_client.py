@@ -170,12 +170,17 @@ async def get_llm_response(
     providers = _get_provider_order()
 
     if not providers:
-        raise Exception(
+        # Instead of raising, return a fallback response so scan can continue
+        logger.error(
             "No LLM providers available. All providers are either disabled "
             "(quota/auth errors) or have no API key configured. "
             "Please add a valid API key to backend/.env "
             "(GROQ_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY)."
         )
+        # Return empty JSON response so agents can use fallback logic
+        if json_mode:
+            return '{"error": "No LLM providers available", "fallback": true}'
+        return "No LLM providers available. Using fallback analysis."
 
     last_error = None
 

@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/layout/navbar";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Vulnora — Autonomous Security Research Agent",
+  title: "Verdexa — Security Intelligence & Hiring Evaluation Platform",
   description:
-    "AI-powered autonomous security analysis that discovers vulnerabilities, simulates exploits, generates patches, and produces professional security reports.",
+    "Enterprise-grade autonomous platform that audits real codebases for vulnerabilities, evaluates developer security intelligence, and generates AI-powered hiring decisions.",
 };
 
 export default function RootLayout({
@@ -18,9 +17,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-background text-foreground antialiased`}>
-        <Navbar />
-        <main className="min-h-[calc(100vh-64px)]">{children}</main>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        {children}
       </body>
     </html>
   );

@@ -17,9 +17,9 @@ import { DetailedReport } from "@/components/detailed-report";
 import { FileStructureTree } from "@/components/file-structure-tree";
 import { useVulnoraStore } from "@/store/vulnora-store";
 import {
-  getResults,
+  getScanResults,
   getProject,
-  getAgentLogs,
+  getProjectAgentLogs,
   startScan,
   getScanStatus,
 } from "@/lib/api";
@@ -66,26 +66,38 @@ export default function ResultsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [proj, results, logs] = await Promise.all([
+      const [proj, rawResults, rawLogs] = await Promise.all([
         getProject(projectId),
-        getResults(projectId).catch(() => null),
-        getAgentLogs(projectId).catch(() => []),
+        getScanResults(projectId).catch(() => null),
+        getProjectAgentLogs(projectId).catch(() => []),
       ]);
       setCurrentProject(proj);
-      setAgentLogs((logs as any)?.logs || logs || []);
+      // API returns { data: { logs } } or array; normalize to array
+      const logs = (rawLogs as any)?.logs ?? rawLogs ?? [];
+      setAgentLogs(Array.isArray(logs) ? logs : []);
 
-      if (results) {
-        setVulnerabilities(results.vulnerabilities || []);
-        setReport(results.report || null);
-        setAttackPaths(results.attack_paths || []);
+      // Backend returns { success, data: { vulnerabilities, report, attack_paths, ... } }; unwrap
+      const results = rawResults?.data ?? rawResults;
+      if (results && typeof results === "object") {
+        setVulnerabilities(results.vulnerabilities ?? []);
+        setReport(results.report ?? null);
+        setAttackPaths(results.attack_paths ?? []);
       }
 
-      // Check if scan in progress
+      // Check if scan in progress — only set scanning if NOT already completed/failed
       const activeStatuses = ["recon", "analysis", "exploit", "patch", "report", "scanning"];
-      if (activeStatuses.includes(proj.scan_status)) {
-        const status = await getScanStatus(projectId);
-        setScanStatus(status);
-        setScanning(true);
+      if (proj?.scan_status && activeStatuses.includes(proj.scan_status)) {
+        try {
+          const status = await getScanStatus(projectId);
+          setScanStatus(status);
+          // Check status from both project and scan status endpoint
+          const scanStatusValue = status?.status || proj.scan_status;
+          if (scanStatusValue !== "completed" && scanStatusValue !== "failed") {
+            setScanning(true);
+          }
+        } catch {
+          // ignore
+        }
       }
     } catch (e) {
       console.error("Failed to load data", e);
@@ -94,39 +106,88 @@ export default function ResultsPage() {
     }
   }, [projectId, setCurrentProject, setScanStatus, setVulnerabilities]);
 
+  // Run initial load only when projectId changes (avoids re-running when callback identity changes during scan — which caused "refresh" and empty state)
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (!projectId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const [proj, rawResults, rawLogs] = await Promise.all([
+          getProject(projectId),
+          getScanResults(projectId).catch(() => null),
+          getProjectAgentLogs(projectId).catch(() => []),
+        ]);
+        if (cancelled) return;
+        setCurrentProject(proj);
+        const logs = (rawLogs as any)?.logs ?? rawLogs ?? [];
+        setAgentLogs(Array.isArray(logs) ? logs : []);
+        const results = rawResults?.data ?? rawResults;
+        if (results && typeof results === "object") {
+          setVulnerabilities(results.vulnerabilities ?? []);
+          setReport(results.report ?? null);
+          setAttackPaths(results.attack_paths ?? []);
+        }
+        if (proj?.scan_status && ["recon", "analysis", "exploit", "patch", "report", "scanning"].includes(proj.scan_status)) {
+          try {
+            const status = await getScanStatus(projectId);
+            if (cancelled) return;
+            setScanStatus(status);
+            // Check status from both project and scan status endpoint
+            const scanStatusValue = status?.status || proj.scan_status;
+            if (scanStatusValue !== "completed" && scanStatusValue !== "failed") {
+              setScanning(true);
+            }
+          } catch {
+            // ignore
+          }
+        }
+      } catch (e) {
+        if (!cancelled) console.error("Failed to load data", e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [projectId, setCurrentProject, setScanStatus, setVulnerabilities]);
 
-  // Poll for data during scanning
+  // Poll for results/logs during scanning (ScanProgress handles its own scan status polling)
+  // Unwrap API response (data) and avoid overwriting state with empty when backend hasn't persisted yet
   useEffect(() => {
     if (!scanning) return;
     const interval = setInterval(async () => {
       try {
-        const [results, logs] = await Promise.all([
-          getResults(projectId).catch(() => null),
-          getAgentLogs(projectId).catch(() => []),
+        const [rawResults, rawLogs, status] = await Promise.all([
+          getScanResults(projectId).catch(() => null),
+          getProjectAgentLogs(projectId).catch(() => []),
+          getScanStatus(projectId).catch(() => null),
         ]);
-        setAgentLogs((logs as any)?.logs || logs || []);
-        if (results) {
-          setVulnerabilities(results.vulnerabilities || []);
-          setReport(results.report || null);
-          setAttackPaths(results.attack_paths || []);
-        }
-
-        const status = await getScanStatus(projectId);
-        setScanStatus(status);
-        if (status.status === "completed" || status.status === "failed") {
+        
+        // Check if scan completed or failed
+        if (status && (status.status === "completed" || status.status === "failed")) {
           setScanning(false);
-          // Final reload
-          loadData();
+          setScanStatus(status);
+        }
+        
+        const logs = (rawLogs as any)?.logs ?? rawLogs ?? [];
+        if (Array.isArray(logs)) setAgentLogs(logs);
+        const results = rawResults?.data ?? rawResults;
+        if (results && typeof results === "object") {
+          // Always update vulnerabilities if they exist (even during scan)
+          if (Array.isArray(results.vulnerabilities)) {
+            setVulnerabilities(results.vulnerabilities);
+          }
+          if (results.report != null) setReport(results.report);
+          if (Array.isArray(results.attack_paths) && results.attack_paths.length > 0) {
+            setAttackPaths(results.attack_paths);
+          }
         }
       } catch {
         // Ignore polling errors
       }
-    }, 3000);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [scanning, projectId, loadData, setScanStatus, setVulnerabilities]);
+  }, [scanning, projectId, setVulnerabilities, setScanStatus]);
 
   async function handleStartScan(force: boolean = false) {
     setScanStarting(true);
@@ -288,9 +349,29 @@ export default function ResultsPage() {
           <ScanProgress
             projectId={projectId}
             scanStatus={scanStatus}
-            onComplete={() => {
+            onComplete={async () => {
               setScanning(false);
-              loadData();
+              try {
+                // Refresh all data when scan completes
+                const [proj, rawResults, rawLogs, finalStatus] = await Promise.all([
+                  getProject(projectId),
+                  getScanResults(projectId).catch(() => null),
+                  getProjectAgentLogs(projectId).catch(() => []),
+                  getScanStatus(projectId).catch(() => null),
+                ]);
+                setCurrentProject(proj);
+                if (finalStatus) setScanStatus(finalStatus);
+                const logs = (rawLogs as any)?.logs ?? rawLogs ?? [];
+                setAgentLogs(Array.isArray(logs) ? logs : []);
+                const results = rawResults?.data ?? rawResults;
+                if (results && typeof results === "object") {
+                  setVulnerabilities(results.vulnerabilities ?? []);
+                  setReport(results.report ?? null);
+                  setAttackPaths(results.attack_paths ?? []);
+                }
+              } catch (e) {
+                console.error("Error refreshing data after scan completion:", e);
+              }
             }}
           />
         </motion.div>

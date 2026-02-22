@@ -1,125 +1,65 @@
-"""Vulnora - Autonomous Security Research Agent - Backend API."""
+"""Verdexa — Security Intelligence & Hiring Evaluation Platform."""
 
-import os
-from dotenv import load_dotenv
-load_dotenv()  # Load .env into os.environ before anything else
-
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import logging
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
-from config import settings
-from routes.projects import router as projects_router
-from routes.scanning import router as scanning_router
-
-import os
+from config import get_settings
+from db.database import engine, Base
+from routes import candidates, evaluations, agent_logs
+from routes import interview
+from routes import scanning, projects, url_scan
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifecycle manager."""
-    # Startup
-    os.makedirs(settings.upload_dir, exist_ok=True)
-    os.makedirs(settings.chroma_persist_dir, exist_ok=True)
-    print("[*] Vulnora Backend Starting...")
-    print(f"   LLM Provider: {settings.llm_provider}")
-    print(f"   Upload Dir: {settings.upload_dir}")
-    print(f"   VULNORA_DEV_AUTH_BYPASS: {os.environ.get('VULNORA_DEV_AUTH_BYPASS', '0')}")
+    """Application startup and shutdown lifecycle."""
+    # Startup: create database tables (best-effort — app can still serve non-DB routes)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Database connection failed at startup: {e}. DB-dependent routes will fail.")
     yield
-    # Shutdown
-    print("[*] Vulnora Backend Shutting Down...")
+    # Shutdown: dispose engine
+    try:
+        await engine.dispose()
+    except Exception:
+        pass
 
 
-
-# --- Logging setup ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger("vulnora")
-
-# --- Rate limiting setup ---
-limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute", "200/hour"])
+settings = get_settings()
 
 app = FastAPI(
-    title="Vulnora - Autonomous Security Research Agent",
-    description="AI-powered autonomous security analysis system",
-    version="1.0.0",
+    title="Verdexa",
+    description="Security Intelligence & Hiring Evaluation Platform — Unified code security auditing and developer assessment",
+    version="2.0.0",
     lifespan=lifespan,
 )
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS (allow credentials, all methods, all headers, configurable origins)
-origins = [o.strip() for o in settings.backend_cors_origins.split(",") if o.strip()]
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.cors_origins.split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Logging middleware ---
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger.info(f"{request.method} {request.url.path} from {request.client.host}")
-    try:
-        response = await call_next(request)
-        logger.info(f"{request.method} {request.url.path} - {response.status_code}")
-        return response
-    except Exception as exc:
-        logger.error(f"Error handling {request.method} {request.url.path}: {exc}")
-        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
-
-# --- Global error handler for validation and HTTP errors ---
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled error: {exc}")
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
-
-# Routes
-app.include_router(projects_router)
-app.include_router(scanning_router)
-
-
-# --- Dev Auth Bypass Check Endpoint ---
-@app.get("/api/dev-auth-check")
-async def dev_auth_check():
-    """Check if dev auth bypass is active."""
-    return {
-        "VULNORA_DEV_AUTH_BYPASS": os.environ.get("VULNORA_DEV_AUTH_BYPASS", "0"),
-        "bypass_active": os.environ.get("VULNORA_DEV_AUTH_BYPASS", "0") == "1"
-    }
-
-
-
-# --- Health and root endpoints (no auth/rate limit) ---
-@app.get("/")
-async def root():
-    return {
-        "name": "Vulnora",
-        "description": "Autonomous Security Research Agent",
-        "version": "1.0.0",
-        "status": "operational",
-    }
-
-
 
 @app.get("/health")
-async def health():
-    return {"status": "healthy"}
+async def health_check():
+    return {"status": "healthy", "service": "verdexa", "version": "2.0.0"}
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "main:app",
-        host=settings.backend_host,
-        port=settings.backend_port,
-        reload=True,
-    )
+# Register Routers — Hiring Intelligence
+app.include_router(candidates.router, prefix="/api", tags=["Candidates"])
+app.include_router(evaluations.router, prefix="/api", tags=["Evaluations"])
+app.include_router(agent_logs.router, prefix="/api", tags=["Agent Logs"])
+app.include_router(interview.router, prefix="/api", tags=["Interview"])
+
+# Register Routers — Security Intelligence
+app.include_router(scanning.router, tags=["Security Scanning"])
+app.include_router(projects.router, tags=["Projects"])
+app.include_router(url_scan.router, tags=["URL / Website Scan"])

@@ -46,19 +46,16 @@ export function UploadPanel() {
     setUploadResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append("project_name", projectName);
-
+      let result;
       if (mode === "zip" && file) {
-        formData.append("file", file);
+        result = await uploadRepo(projectName, undefined, file);
       } else if (mode === "github" && repoUrl) {
-        formData.append("repo_url", repoUrl);
+        result = await uploadRepo(projectName, repoUrl);
       } else {
         setIsUploading(false);
         return;
       }
 
-      const result = await uploadRepo(formData);
       setUploadResult(result);
     } catch (error: any) {
       setUploadResult({ error: error.message });
@@ -122,11 +119,10 @@ export function UploadPanel() {
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-all duration-200 ${
-                  dragActive
+                className={`relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-all duration-200 ${dragActive
                     ? "border-blue-500 bg-blue-500/5"
                     : "border-border hover:border-muted-foreground/50"
-                }`}
+                  }`}
               >
                 <input
                   ref={fileInputRef}

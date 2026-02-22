@@ -1,15 +1,5 @@
-from .supabase_client import (
-    get_supabase,
-    create_project,
-    get_project,
-    get_projects,
-    update_project,
-    store_file,
-    get_project_files,
-    get_file_content,
-    store_vulnerability,
-    get_vulnerabilities,
-    get_vulnerability,
-    store_agent_log,
-    get_agent_logs,
-)
+"""Database package — re-exports from database module."""
+
+from db.database import engine, async_session, Base, get_db
+
+__all__ = ["engine", "async_session", "Base", "get_db"]
